@@ -1,0 +1,21 @@
+.scroll-table {
+    width: 500px;
+    overflow: auto;
+    height: 600px;
+}
+.scroll-table table {
+    border-collapse: collapse;
+}
+.scroll-table td {
+    padding: 5px;
+}
+
+.scroll-table .tr1 {
+    background: #DADADA;
+}
+
+.scroll-table th {
+    background: #aaa;
+    padding: 5px;
+    color: #fff;
+}
