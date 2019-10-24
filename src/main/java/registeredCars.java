@@ -25,7 +25,7 @@ public class registeredCars extends HttpServlet {
         PrintWriter writer = response.getWriter();
 
         //regular expression
-        String reg = "[A-Z0-9\\-]{4,16}";
+        String reg = "[A-Z0-9\\- ]{4,16}";
 
         //get Driver class
         String DB_Driver = "org.h2.Driver";
@@ -100,7 +100,7 @@ public class registeredCars extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         //regular expression
-        String reg = "[A-Z0-9\\-]{4,16}";
+        String reg = "[A-Z0-9\\- ]{4,16}";
 
         PrintWriter writer = response.getWriter();
 
