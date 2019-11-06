@@ -2,8 +2,8 @@ import java.sql.*;
 
 public final class DataBase {
     private static DataBase db;
-    private Connection connection;
-    private Statement statement;
+    public Connection connection;
+    public Statement statement;
 
     private DataBase () {
         //get Driver class
