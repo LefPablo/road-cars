@@ -25,7 +25,8 @@ public final class DataBase {
     }
 
     private void creatTable() throws SQLException {
-        statement.execute("CREATE TABLE IF NOT EXISTS TEST (ID INT PRIMARY KEY AUTO_INCREMENT, CARNUMBER VARCHAR(16), TIMESTAMP VARCHAR(40))");
+//        statement.execute("CREATE TABLE IF NOT EXISTS TEST (ID INT PRIMARY KEY AUTO_INCREMENT, CARNUMBER VARCHAR(16), TIMESTAMP VARCHAR(40))");
+        statement.execute("CREATE TABLE IF NOT EXISTS TEST (ID INT PRIMARY KEY AUTO_INCREMENT, CARNUMBER VARCHAR(16), TIMESTAMP TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
     }
 
     public static synchronized DataBase getDb() {

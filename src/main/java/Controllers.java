@@ -1,83 +1,27 @@
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
 import java.sql.*;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.stream.Collectors;
+
 
 public class Controllers {
-    //    public static JSONObject regCar(JSONObject body) {
-//        //regular expression
-//        String reg = "[A-Z0-9\\- ]{4,16}";
-//
-//        //get request body
-//        String body = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-//
-//        //parse body to json
-//        Object json = null;
-//        try {
-//            json = new JSONParser().parse(body);
-//        } catch (
-//                ParseException e) {
-//            e.printStackTrace();
-//        }
-//        JSONObject jsob = (JSONObject) json;
-//
-//        //get values carNumber and timestamp
-//        String carNumber = jsob.get("carNumber").toString();
-//        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
-//        String timestamp = OffsetDateTime.now().format(dtf);
-//
-//        //regular expression comparison
-//        if (!carNumber.matches(reg)) {
-//            try {
-//                response.setStatus(400);
-//                writer.println("HTTP Status " + response.getStatus());
-//                writer.println("Invalid data, required format: " + reg);
-//            } finally {
-//                return;
-//            }
-//        }
-//
-//        //connect to db and insert row
-//        try {
-//            Connection conn = DataBase.getDb().connection;
-//
-//            //insert row to table
-//            String q = "insert into TEST(CARNUMBER, TIMESTAMP ) values(?, ?)";
-//            PreparedStatement prepareSt = conn.prepareStatement(q);
-//            prepareSt.setString(1, carNumber);
-//            prepareSt.setString(2, timestamp);
-//            prepareSt.execute();
-//        } catch (SQLException e) {
-//            System.out.println(e.getMessage());
-//        }
-//
-//        //write response in json format
-//        response.setContentType("application/json; charset=utf-8");
-//        try {
-//            JSONObject jsonResponse = new JSONObject();
-//            jsonResponse.put("carNumber", carNumber);
-//            jsonResponse.put("timestamp", timestamp);
-//            writer.println(jsonResponse);
-//            response.setStatus(200);
-//        } finally {
-//            writer.close();
-//        }
-//    }
-    public static void addCar(String carNumber, String timestamp) throws SQLException {
+    public static void addCar(String carNumber) throws SQLException {
+        //connect to db and insert row
+        Connection conn = DataBase.getDb().connection;
+
+        String q = "insert into TEST(CARNUMBER) values(?)";
+        PreparedStatement preparedSt = conn.prepareStatement(q);
+        preparedSt.setString(1, carNumber);
+        preparedSt.execute();
+    }
+
+    public static void addCar(String carNumber, Timestamp timestamp) throws SQLException {
         //connect to db and insert row
         Connection conn = DataBase.getDb().connection;
 
         String q = "insert into TEST(CARNUMBER, TIMESTAMP ) values(?, ?)";
         PreparedStatement preparedSt = conn.prepareStatement(q);
         preparedSt.setString(1, carNumber);
-        preparedSt.setString(2, timestamp);
+        preparedSt.setTimestamp(2, timestamp);
         preparedSt.execute();
     }
 
@@ -99,88 +43,61 @@ public class Controllers {
     public static ResultSet getAllRecords() throws SQLException {
         Connection conn = DataBase.getDb().connection;
         Statement st = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-
         ResultSet result = st.executeQuery("SELECT * FROM TEST");
 
+        while(result.next()) {
+            System.out.println(result.getString("TIMESTAMP"));
+        }
+
         return result;
     }
 
-    public static ResultSet getRecordsByCarNumber(ResultSet records, String carNumber) throws SQLException {
-        Connection conn = DataBase.getDb().connection;
-        PreparedStatement preparedSt;
-        ResultSet result = null;
+    public static LocalDate stringDateToLocalDate (String date) {
+        String dataFormat = "yyyyMMdd";
+        LocalDate dateTime = null;
+        if (date != null) {
+            //parse date from request to localDate
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dataFormat);
+            //regular expression comparison
+            dateTime = LocalDate.parse(date, formatter);
+        }
+        return dateTime;
+    }
 
-        if (carNumber != null) {
-            while(records.next()) {
-                if (records.getString("CARNUMBER") != carNumber) {
-//                    System.out.println(records.getString("CARNUMBER"));
-                    records.deleteRow();
-                }
+    public static ResultSet getRecordsByFilters(String carNumber, LocalDate date) throws SQLException {
+        Connection conn = DataBase.getDb().connection;
+        PreparedStatement preparedSt = null;
+        ResultSet result;
+
+        String q = null;
+        if (carNumber == null) {
+            if (date == null) {
+                q = "SELECT * FROM TEST";
+                preparedSt = conn.prepareStatement(q);
+            } else {
+                q = "SELECT * FROM TEST WHERE DAY(TIMESTAMP)=? AND MONTH(TIMESTAMP)=? AND YEAR(TIMESTAMP)=?";
+                preparedSt = conn.prepareStatement(q);
+                preparedSt.setString(1, String.valueOf(date.getDayOfMonth()));
+                preparedSt.setString(2, String.valueOf(date.getMonthValue()));
+                preparedSt.setString(3, String.valueOf(date.getYear()));
+            }
+        } else {
+            if (date == null) {
+                q = "SELECT * FROM TEST WHERE CARNUMBER = ? ";
+                preparedSt = conn.prepareStatement(q);
+                preparedSt.setString(1, carNumber);
+            } else {
+                q = "SELECT * FROM TEST WHERE CARNUMBER = ? AND DAY(TIMESTAMP)=? AND MONTH(TIMESTAMP)=? AND YEAR(TIMESTAMP)=?";
+                preparedSt = conn.prepareStatement(q);
+                preparedSt.setString(1, carNumber);
+                preparedSt.setString(2, String.valueOf(date.getDayOfMonth()));
+                preparedSt.setString(3, String.valueOf(date.getMonthValue()));
+                preparedSt.setString(4, String.valueOf(date.getYear()));
             }
         }
-//        records.afterLast();
-        result = records;
-        //make query to table
-//        String request;
-//        if (carNumber == null) {
-//            request = "SELECT * FROM TEST";
-//        } else {
-//            request = "SELECT * FROM TEST WHERE CARNUMBER = ? ";
-//        }
-//        preparedSt = conn.prepareStatement(request);
-//        if (carNumber != null) preparedSt.setString(1, carNumber);
-//        result = preparedSt.executeQuery();
-        while(result.previous()) {
-            System.out.println(result.getString("CARNUMBER"));
-        }
+        result = preparedSt.executeQuery();
 
         return result;
     }
 
-//    public static ResultSet getRecordsByTimestamp(String timestamp) throws SQLException {
-//        Connection conn = DataBase.getDb().connection;
-//        PreparedStatement preparedSt = null;
-//        ResultSet result = null;
-//
-//        //parse date from request
-//        String dataForm = "yyyyMMdd";
-//        LocalDate dateTime = null;
-//        if (timestamp != null) {
-//            //parse date from request to localDate
-//            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dataForm);
-//
-//            //regular expression comparison
-//            try {
-//                dateTime = LocalDate.parse(timestamp, formatter);
-//            } catch (Exception e) {
-//
-//            }
-//        }
-//
-//        //filter result by date
-//        String name = null;
-//        String time = null;
-//        while (result.next()) {
-//            name = result.getString("CARNUMBER");
-//            time = result.getString("TIMESTAMP");
-//            //if date is null then add all results to response
-//            if (timestamp != null) {
-//                //parse date in the table to localDate
-//                LocalDate carDate = null;
-//                try {
-//                    carDate = ZonedDateTime.parse(time).toLocalDate();
-//                } catch (Exception e) {
-//                    continue;
-//                }
-//
-//                //compare carDate with request date
-//                if (dateTime.compareTo(carDate) == 0) {
-//                    array.add(new String[]{name, time});
-//                }
-//            } else {
-//                array.add(new String[]{name, time});
-//            }
-//        }
-//        return result;
-//    }
 }
